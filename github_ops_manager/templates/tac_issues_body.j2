@@ -7,7 +7,9 @@ Sample output of `{{ command_data.command }}`:
 
 {% if command_data.parser_used != "YamlPathParse" %}
 ```cli
-{{ command_data.command_output }}
+{% if command_data.command_output|length > 5000 %}{{ command_data.command_output[:5000] }}
+... (output truncated - showing first 5000 characters)
+{% else %}{{ command_data.command_output }}{% endif %}
 ```
 {% endif %}
 {% if command_data.parser_used=="Genie"%}
@@ -16,7 +18,9 @@ A Genie Parser exists for this show command, and results in data like so:
 You MUST use a Genie Parser for this `{{ command_data.command }}` command. Pay attention to the Parsing Requirements.
 
 ```json
-{{ command_data.parsed_output }}
+{% if command_data.parsed_output|length > 10000 %}{{ command_data.parsed_output[:10000] }}
+... (output truncated - showing first 10000 characters)
+{% else %}{{ command_data.parsed_output }}{% endif %}
 ```
 
 {% endif %}
@@ -26,7 +30,9 @@ The data for the command or API call `{{ command_data.command }}` is already in 
 You MUST use YamlPath Parse keyword for this `{{ command_data.command }}` command or API call. Pay attention to the Parsing Requirements.
 
 ```yaml
-{{ command_data.parsed_output }}
+{% if command_data.parsed_output|length > 10000 %}{{ command_data.parsed_output[:10000] }}
+... (output truncated - showing first 10000 characters)
+{% else %}{{ command_data.parsed_output }}{% endif %}
 ```
 
 {% endif %}
@@ -34,7 +40,9 @@ You MUST use YamlPath Parse keyword for this `{{ command_data.command }}` comman
 Run the command as | json-pretty native (for example: show ip interface brief | json-pretty native), with a resulting JSON body like so:
 
 ```json
-{{ command_data.parsed_output }}
+{% if command_data.parsed_output|length > 10000 %}{{ command_data.parsed_output[:10000] }}
+... (output truncated - showing first 10000 characters)
+{% else %}{{ command_data.parsed_output }}{% endif %}
 ```
 
 {% endif %}
@@ -55,7 +63,9 @@ Mocked Regex Data:
 
 ```json
 {% if command_data.parsed_output %}
-{{ command_data.parsed_output }}
+{% if command_data.parsed_output|length > 5000 %}{{ command_data.parsed_output[:5000] }}
+... (output truncated - showing first 5000 characters)
+{% else %}{{ command_data.parsed_output }}{% endif %}
 {% else %}
 
 
@@ -81,7 +91,9 @@ The schema of these variables must not change and it's crucial for the data retu
 
 ```yaml
 {% if jobfile_parameters %}
-{{ jobfile_parameters }}
+{% if jobfile_parameters|length > 5000 %}{{ jobfile_parameters[:5000] }}
+... (schema truncated - showing first 5000 characters)
+{% else %}{{ jobfile_parameters }}{% endif %}
 {% else %}
 device_connectivity_type: ssh
 DUTS:
@@ -98,7 +110,9 @@ A mapping of how the keys in the above expected data can be accessed through the
 
 ```
 {% if jobfile_parameters_mapping%}
-{{ jobfile_parameters_mapping}}
+{% if jobfile_parameters_mapping|length > 3000 %}{{ jobfile_parameters_mapping[:3000] }}
+... (mapping truncated - showing first 3000 characters)
+{% else %}{{ jobfile_parameters_mapping }}{% endif %}
 {% else %}
 
 {% endif %}
