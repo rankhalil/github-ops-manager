@@ -18,7 +18,7 @@ from github_ops_manager.processing.yaml_processor import YAMLProcessor
 from github_ops_manager.schemas.default_issue import IssueModel, IssuesYAMLModel, PullRequestModel
 from github_ops_manager.synchronize.driver import run_process_issues_workflow
 from github_ops_manager.utils.tac import find_issue_with_title
-from github_ops_manager.utils.templates import construct_jinja2_template_from_file, render_template_with_model
+from github_ops_manager.utils.templates import GITHUB_MAX_BODY_LENGTH, construct_jinja2_template_from_file, render_template_with_model
 from github_ops_manager.utils.yaml import dump_yaml_to_file, load_test_case_definitions_from_directory, load_yaml_file
 
 load_dotenv()
@@ -105,6 +105,7 @@ def tac_sync_issues_cli(
                 body=render_template_with_model(
                     model=test_case_definition,
                     template=template,
+                    max_body_length=GITHUB_MAX_BODY_LENGTH,
                 ),
                 labels=test_case_definition.labels,
             )
@@ -126,6 +127,7 @@ def tac_sync_issues_cli(
             existing_issue.body = render_template_with_model(
                 model=test_case_definition,
                 template=template,
+                max_body_length=GITHUB_MAX_BODY_LENGTH,
             )
             existing_issue.labels = test_case_definition.labels
             if test_case_definition.generated_script_path is not None:
