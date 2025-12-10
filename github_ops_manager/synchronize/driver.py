@@ -27,6 +27,7 @@ async def run_process_issues_workflow(
     yaml_path: Path,
     raise_on_yaml_error: bool = False,
     testing_as_code_workflow: bool = False,
+    additional_labels: list[str] | None = None,
 ) -> ProcessIssuesResult:
     """Run the process-issues workflow: load issues from YAML and return them/errors."""
     processor = YAMLProcessor(raise_on_error=raise_on_yaml_error)
@@ -38,6 +39,16 @@ async def run_process_issues_workflow(
     # Render Jinja2 templates for issue bodies if provided.
     if issues_model.issue_template:
         issues_model = await render_issue_bodies(issues_model)
+
+    # Merge additional labels from CLI if provided.
+    if additional_labels:
+        logger.info("Merging additional labels from CLI with YAML labels", additional_labels=additional_labels)
+        for issue in issues_model.issues:
+            yaml_labels = issue.labels or []
+            # Combine and deduplicate: YAML labels + CLI labels
+            merged_labels = list(set(yaml_labels + additional_labels))
+            issue.labels = merged_labels
+            logger.debug("Merged labels for issue", issue_title=issue.title, merged_labels=merged_labels)
 
     # Set up GitHub adapter.
     github_adapter = await GitHubKitAdapter.create(
