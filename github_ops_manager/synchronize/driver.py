@@ -28,6 +28,8 @@ async def run_process_issues_workflow(
     raise_on_yaml_error: bool = False,
     testing_as_code_workflow: bool = False,
     additional_labels: list[str] | None = None,
+    create_prs: bool = False,
+    create_branches: bool = False,
 ) -> ProcessIssuesResult:
     """Run the process-issues workflow: load issues from YAML and return them/errors."""
     processor = YAMLProcessor(raise_on_error=raise_on_yaml_error)
@@ -135,6 +137,8 @@ async def run_process_issues_workflow(
         default_branch,
         yaml_dir,
         testing_as_code_workflow=testing_as_code_workflow,
+        create_prs=create_prs,
+        create_branches=create_branches,
     )
     end_time = time.time()
     total_time = end_time - start_time

@@ -190,6 +190,7 @@ async def sync_github_pull_request(
     base_directory: Path,
     existing_pull_request: PullRequest | None = None,
     testing_as_code_workflow: bool = False,
+    create_branches: bool = False,
 ) -> None:
     """Synchronize a specific pull request for an issue."""
     with bound_contextvars(
@@ -229,8 +230,16 @@ async def sync_github_pull_request(
         if pr_sync_decision == SyncDecision.CREATE:
             # Check if branch exists, create if not
             if not await github_adapter.branch_exists(desired_branch_name):
-                logger.info("Creating branch for PR", branch=desired_branch_name, base_branch=default_branch)
-                await github_adapter.create_branch(desired_branch_name, default_branch)
+                if create_branches:
+                    logger.info("Creating branch for PR", branch=desired_branch_name, base_branch=default_branch)
+                    await github_adapter.create_branch(desired_branch_name, default_branch)
+                else:
+                    logger.warning(
+                        "Branch does not exist and create_branches=False, skipping PR creation",
+                        branch=desired_branch_name,
+                        issue_title=desired_issue.title,
+                    )
+                    return
             else:
                 logger.info("Branch already exists, skipping creation", branch=desired_branch_name)
 
@@ -273,8 +282,15 @@ async def sync_github_pull_requests(
     default_branch: str,
     base_directory: Path,
     testing_as_code_workflow: bool = False,
+    create_prs: bool = False,
+    create_branches: bool = False,
 ) -> None:
     """Process pull requests for issues that specify a pull_request field."""
+    # Guard clause: Early exit if create_prs is False
+    if not create_prs:
+        logger.info("Skipping pull request processing because create_prs=False")
+        return
+
     desired_issues_with_prs = [issue for issue in desired_issues if issue.pull_request is not None]
     for desired_issue in desired_issues_with_prs:
         existing_issue = next((issue for issue in existing_issues if issue.title == desired_issue.title), None)
@@ -300,4 +316,5 @@ async def sync_github_pull_requests(
             base_directory,
             existing_pull_request=existing_pr,
             testing_as_code_workflow=testing_as_code_workflow,
+            create_branches=create_branches,
         )
