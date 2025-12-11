@@ -203,8 +203,8 @@ repo_app.callback()(repo_callback)
 def process_issues_cli(
     ctx: typer.Context,
     yaml_path: Annotated[Path, Argument(envvar="YAML_PATH", help="Path to YAML file for issues.")],
-    create_prs: Annotated[bool, Option(envvar="CREATE_PRS", help="Create PRs for issues.")] = False,
-    create_branches: Annotated[bool, Option(envvar="CREATE_BRANCHES", help="Create branches for PRs.")] = False,
+    create_prs: Annotated[bool, Option("--create-prs", envvar="CREATE_PRS", help="Create PRs for issues.")] = False,
+    create_branches: Annotated[bool, Option("--create-branch", envvar="CREATE_BRANCHES", help="Create branches for PRs.")] = False,
     add_labels: Annotated[list[str] | None, Option("--add-labels", "-l", help="Additional labels to add to all issues from the YAML file.")] = None,
     debug: Annotated[bool, Option(envvar="DEBUG", help="Enable debug mode.")] = False,
     testing_as_code_workflow: Annotated[bool, Option(envvar="TESTING_AS_CODE_WORKFLOW", help="Enable Testing as Code workflow.")] = False,
