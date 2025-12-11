@@ -62,9 +62,9 @@ def load_test_case_definitions_from_directory(directory_path: Path) -> TestingAs
     if not directory_path.is_dir():
         raise ValueError(f"Path is not a directory: {directory_path.absolute()}")
 
-    # Find all YAML files in the directory
+    # Find all YAML files in the directory (including .yafml from Quicksilver)
     yaml_files: list[Path] = []
-    for extension in ["*.yaml", "*.yml"]:
+    for extension in ["*.yaml", "*.yml", "*.yafml"]:
         yaml_files.extend(directory_path.glob(extension))
 
     if not yaml_files:
