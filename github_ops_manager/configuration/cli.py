@@ -204,7 +204,7 @@ def process_issues_cli(
     ctx: typer.Context,
     yaml_path: Annotated[Path, Argument(envvar="YAML_PATH", help="Path to YAML file for issues.")],
     create_prs: Annotated[bool, Option(envvar="CREATE_PRS", help="Create PRs for issues.")] = False,
-    add_labels: Annotated[list[str] | None, Option("--add-labels", "-l", help="Additional labels to add to all issues from the YAML file.")] = None,
+    add_labels: Annotated[list[str] | None, Option("--add-labels", "-l", help="Additional labels to add to newly created issues (not applied to existing issues).")] = None,
     debug: Annotated[bool, Option(envvar="DEBUG", help="Enable debug mode.")] = False,
     testing_as_code_workflow: Annotated[bool, Option(envvar="TESTING_AS_CODE_WORKFLOW", help="Enable Testing as Code workflow.")] = False,
 ) -> None:
@@ -221,7 +221,7 @@ def process_issues_cli(
         typer.echo("Testing as Code workflow is enabled - any Pull Requests created will have an augmented body")
 
     if add_labels:
-        typer.echo(f"Additional labels will be added to all issues: {', '.join(add_labels)}")
+        typer.echo(f"Additional labels will be added to new issues: {', '.join(add_labels)}")
 
     # Run the workflow
     result = asyncio.run(

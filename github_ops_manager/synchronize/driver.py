@@ -40,16 +40,6 @@ async def run_process_issues_workflow(
     if issues_model.issue_template:
         issues_model = await render_issue_bodies(issues_model)
 
-    # Merge additional labels from CLI if provided.
-    if additional_labels:
-        logger.info("Merging additional labels from CLI with YAML labels", additional_labels=additional_labels)
-        for issue in issues_model.issues:
-            yaml_labels = issue.labels or []
-            # Combine and deduplicate: YAML labels + CLI labels
-            merged_labels = list(set(yaml_labels + additional_labels))
-            issue.labels = merged_labels
-            logger.debug("Merged labels for issue", issue_title=issue.title, merged_labels=merged_labels)
-
     # Set up GitHub adapter.
     github_adapter = await GitHubKitAdapter.create(
         repo=repo,
@@ -60,6 +50,27 @@ async def run_process_issues_workflow(
         github_app_installation_id=github_app_installation_id,
         github_api_url=github_api_url,
     )
+
+    # Merge additional labels from CLI if provided (only for new issues).
+    if additional_labels:
+        logger.info("Merging additional labels from CLI with YAML labels (new issues only)", additional_labels=additional_labels)
+        
+        # Fetch existing issues to determine which are new
+        existing_issues = await github_adapter.list_issues(state="all")
+        existing_issue_titles = {issue.title for issue in existing_issues}
+        logger.info("Fetched existing issues to filter label additions", count=len(existing_issue_titles))
+        
+        for issue in issues_model.issues:
+            # Skip existing issues - only add labels to new ones
+            if issue.title in existing_issue_titles:
+                logger.debug("Skipping label merge for existing issue", issue_title=issue.title)
+                continue
+            
+            yaml_labels = issue.labels or []
+            # Combine and deduplicate: YAML labels + CLI labels
+            merged_labels = list(set(yaml_labels + additional_labels))
+            issue.labels = merged_labels
+            logger.debug("Merged labels for issue", issue_title=issue.title, merged_labels=merged_labels)
 
     # Synchronize issues to GitHub.
     start_time = time.time()
