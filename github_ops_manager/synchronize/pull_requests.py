@@ -243,8 +243,12 @@ async def sync_github_pull_request(
             else:
                 logger.info("Branch already exists, skipping creation", branch=desired_branch_name)
 
-            # Commit files to branch
-            await commit_files_to_branch(desired_issue, existing_issue, desired_branch_name, base_directory, github_adapter)
+            # Commit files to branch (only if files are specified)
+            if pr.files:
+                logger.info("Committing files to branch", file_count=len(pr.files), branch=desired_branch_name)
+                await commit_files_to_branch(desired_issue, existing_issue, desired_branch_name, base_directory, github_adapter)
+            else:
+                logger.info("No files to commit, creating PR with empty branch", branch=desired_branch_name)
 
             logger.info("Creating new PR for issue", branch=desired_branch_name, base_branch=default_branch)
             new_pr = await github_adapter.create_pull_request(
@@ -266,12 +270,18 @@ async def sync_github_pull_request(
                 body=pr.body,
             )
             await github_adapter.set_labels_on_issue(existing_pull_request.number, pr_labels)
-            desired_file_data = await get_desired_pull_request_file_content(base_directory, desired_issue)
-            pr_file_sync_decision = await decide_github_pull_request_file_sync_action(desired_file_data, existing_pull_request, github_adapter)
-            if pr_file_sync_decision == SyncDecision.CREATE:
-                # The branch will already exist, so we don't need to create it.
-                # However, we do need to commit the files to the branch.
-                await commit_files_to_branch(desired_issue, existing_issue, desired_branch_name, base_directory, github_adapter)
+
+            # Only sync files if files are specified
+            if pr.files:
+                desired_file_data = await get_desired_pull_request_file_content(base_directory, desired_issue)
+                pr_file_sync_decision = await decide_github_pull_request_file_sync_action(desired_file_data, existing_pull_request, github_adapter)
+                if pr_file_sync_decision == SyncDecision.CREATE:
+                    # The branch will already exist, so we don't need to create it.
+                    # However, we do need to commit the files to the branch.
+                    logger.info("Committing files to existing PR branch", file_count=len(pr.files), pr_number=existing_pull_request.number)
+                    await commit_files_to_branch(desired_issue, existing_issue, desired_branch_name, base_directory, github_adapter)
+            else:
+                logger.info("No files to sync for existing PR", pr_number=existing_pull_request.number)
 
 
 async def sync_github_pull_requests(

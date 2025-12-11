@@ -57,6 +57,7 @@ packages = ["github_ops_manager"]
 testpaths = ["tests"]
 python_files = "test_*.py"
 asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"
 markers = [
     "integration"
 ]

@@ -12,6 +12,8 @@ from github_ops_manager.processing.yaml_processor import YAMLProcessingError, YA
 from github_ops_manager.synchronize.issues import render_issue_bodies, sync_github_issues
 from github_ops_manager.synchronize.pull_requests import sync_github_pull_requests
 from github_ops_manager.synchronize.results import AllIssueSynchronizationResults, ProcessIssuesResult
+from github_ops_manager.schemas.default_issue import PullRequestModel
+from github_ops_manager.synchronize.models import SyncDecision
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger(__name__)
 
@@ -77,6 +79,37 @@ async def run_process_issues_workflow(
         desired_issue_count=len(issues_model.issues),
         issue_sync_result_count=len(issue_sync_results.results),
     )
+
+    # Auto-generate pull_request fields for newly created issues if create_prs is enabled
+    if create_prs:
+        newly_created_issues = [
+            result for result in issue_sync_results.results if result.decision == SyncDecision.CREATE
+        ]
+
+        if newly_created_issues:
+            logger.info(
+                "Auto-generating pull_request fields for newly created issues",
+                count=len(newly_created_issues),
+            )
+
+            for result in newly_created_issues:
+                desired_issue = result.desired_issue
+                github_issue = result.github_issue
+
+                # Only auto-generate if pull_request field is not already defined
+                if desired_issue.pull_request is None:
+                    # Create auto-generated pull_request field with empty files
+                    # Files can be added later via normal git workflow
+                    desired_issue.pull_request = PullRequestModel(
+                        title=f"Add test automation for: {desired_issue.title}",
+                        files=[],  # Empty - no files committed by tool
+                    )
+
+                    logger.info(
+                        "Auto-generated pull_request field for new issue (empty branch)",
+                        issue_number=github_issue.number,
+                        issue_title=desired_issue.title,
+                    )
 
     # Synchronize pull requests for issues that specify a pull_request field.
     repo_info = await github_adapter.get_repository()
